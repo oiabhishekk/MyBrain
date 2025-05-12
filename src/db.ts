@@ -1,5 +1,10 @@
 import mongoose from "mongoose"
-const userSchema= new mongoose.Schema({
+import bcrypt from "bcrypt"
+interface IUser extends mongoose.Document{
+  username:string,
+  password:string
+}
+const userSchema= new mongoose.Schema<IUser>({
   username:{
     type:String,
     required:true,
@@ -15,6 +20,28 @@ const userSchema= new mongoose.Schema({
     maxlength:100
   }
 })
+async function connectToDb (){
+  const MONGO_URI= process.env.MONGO_URI
+  if (!MONGO_URI) {
+    throw new Error("MongoDB URI is not defined in the environment variables.");
+  }
+try {
+  await mongoose.connect(MONGO_URI)
+  console.log("connected to DB")
+} catch (error) {
+  return error
+}
+}
+// userSchema.pre<IUser>("save",async function(this:IUser,next){
+//  if(!this.isModified("password")){return next()}
+//   try {
+//    const hashedpswd= await bcrypt.hash(this.password, 10);
+//    this.password= hashedpswd;
+//    return next();
+//   } catch (error) {
+//     return next(error as Error);
+//   }
+// })
 
 const User = mongoose.model("Users",userSchema);
-export {User}
+export {User,connectToDb}
