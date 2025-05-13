@@ -1,12 +1,13 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv'
 import mongoose from 'mongoose';
-import { connectToDb, Content, User } from './db';
-import {z} from "zod"
+import { connectToDb, Content, Link, User } from './db';
+import { z} from "zod"
 import  bcrypt  from 'bcrypt';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken'
 import { userMiddleWare } from './middleware';
+import { random } from './utils';
 dotenv.config()
 const app = express();
 const PORT =process.env.PORT||4000
@@ -148,12 +149,67 @@ app.delete("/api/v1/content", userMiddleWare, async (req, res) => {
   }
 });
 
-app.post("/api/v1/brain/share",(req,res)=>{
-  
-})
-app.get("/api/v1/brain/:shareLink",(req,res)=>{
-  
-})
+app.post("/api/v1/brain/share", userMiddleWare, async (req, res) => {
+  //@ts-ignore
+  const userId = req.user.userId
+  try {
+    const  share  = req.body.share;
+    if (share == false || share == "false") {
+      Link.findOneAndDelete({_id:userId})
+       res.status(200).json({ message: "Link deleted" });
+       return
+    }
+    const alreadyLink = await Link.findOne({userId})
+    if(alreadyLink){
+      const {hash} = alreadyLink
+      res.status(200).json({
+        message: "Link shared already",
+        hash,
+      })
+      return 
+    }
+
+    const hash = random(12);
+
+    const link = new Link({
+      hash,
+      userId: userId, 
+    });
+
+    await link.save();
+
+    res.status(201).json({
+      message: "Link shared successfully",
+      hash,
+    });
+  } catch (error) {
+    console.error("Error sharing brain link:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/v1/brain/:shareLink", async (req, res) => {
+  try {
+    const hash = req.params.shareLink;
+
+    const link = await Link.findOne({ hash }).populate("userId");
+
+    if (!link || !link.userId) {
+       res.status(404).json({ message: "Invalid or expired share link" });
+       return
+    }
+
+    // @ts-ignore
+    const userId = link.userId._id;
+
+    const contents = await Content.find({ userId }).populate("userId", "username");
+
+    res.status(200).json({ contents });
+  } catch (error) {
+    console.error("Error in /api/v1/brain/:shareLink:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 app.listen(PORT,()=>{

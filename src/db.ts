@@ -30,6 +30,22 @@ const contentSchema = new mongoose.Schema({
   userId:{type: mongoose.Types.ObjectId , ref :  "User" , required:true},
 })
 const Content = mongoose.model("Content",contentSchema)
+
+const linkSchema = new mongoose.Schema({
+  hash:String,
+  userId:{type: mongoose.Types.ObjectId , ref :  "User" , required:true},
+})
+const Link = mongoose.model("Link",linkSchema)
+
+
+
+
+
+
+
+
+
+
 async function connectToDb (){
   const MONGO_URI= process.env.MONGO_URI
   if (!MONGO_URI) {
@@ -42,16 +58,7 @@ try {
   return error
 }
 }
-// userSchema.pre<IUser>("save",async function(this:IUser,next){
-//  if(!this.isModified("password")){return next()}
-//   try {
-//    const hashedpswd= await bcrypt.hash(this.password, 10);
-//    this.password= hashedpswd;
-//    return next();
-//   } catch (error) {
-//     return next(error as Error);
-//   }
-// })
+
 
 const User = mongoose.model("User",userSchema);
-export {User,connectToDb,Content}
+export {User,connectToDb,Content,Link}
