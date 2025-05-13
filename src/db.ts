@@ -27,7 +27,7 @@ const contentSchema = new mongoose.Schema({
   title:String,
   link:String,
   tags:[{type:mongoose.Types.ObjectId, ref:"Tag"}],
-  userId:{type: mongoose.Types.ObjectId , ref :  "USER" , required:true},
+  userId:{type: mongoose.Types.ObjectId , ref :  "User" , required:true},
 })
 const Content = mongoose.model("Content",contentSchema)
 async function connectToDb (){
@@ -53,5 +53,5 @@ try {
 //   }
 // })
 
-const User = mongoose.model("Users",userSchema);
+const User = mongoose.model("User",userSchema);
 export {User,connectToDb,Content}

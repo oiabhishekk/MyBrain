@@ -111,12 +111,43 @@ app.post("/api/v1/content", userMiddleWare, async (req: Request, res: Response) 
     res.status(500).json({ error: "Server error" });
   }
 });
-app.get("/api/v1/content",(req,res)=>{
-  
+app.get("/api/v1/content",userMiddleWare ,async(req,res)=>{
+  try {
+    //@ts-ignore
+    const userId= req.user.userId
+    const contents = await Content.find({userId}).populate("userId", "username");
+    res.status(200).json({ contents });
+  } catch (error) {
+    console.error("Error fetching content:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 })
-app.delete("/api/v1/content",(req,res)=>{
-  
-})
+app.delete("/api/v1/content", userMiddleWare, async (req, res) => {
+  try {
+    //@ts-ignore
+    const userId = req.user?.userId;
+    const contentId = req.body.contentId;
+
+    if (!contentId || !mongoose.Types.ObjectId.isValid(contentId)) {
+       res.status(400).json({ message: "contentId is not valid" });
+       return
+    }
+
+    const result = await Content.deleteOne({ _id: contentId, userId });
+
+    if (result.deletedCount === 0) {
+       res.status(404).json({ message: "No content found or not authorized" });
+       return
+    }
+
+    res.status(200).json({ message: "Content deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting content:", error);
+    res.status(500).json({ error: "Server error" });
+    return
+  }
+});
+
 app.post("/api/v1/brain/share",(req,res)=>{
   
 })
