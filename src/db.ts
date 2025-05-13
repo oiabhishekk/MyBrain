@@ -20,6 +20,16 @@ const userSchema= new mongoose.Schema<IUser>({
     maxlength:100
   }
 })
+const contentSchema = new mongoose.Schema({
+  type: {type: String,
+    enum: ["document", "tweet", "youtube", "link"],
+    },
+  title:String,
+  link:String,
+  tags:[{type:mongoose.Types.ObjectId, ref:"Tag"}],
+  userId:{type: mongoose.Types.ObjectId , ref :  "USER" , required:true},
+})
+const Content = mongoose.model("Content",contentSchema)
 async function connectToDb (){
   const MONGO_URI= process.env.MONGO_URI
   if (!MONGO_URI) {
@@ -44,4 +54,4 @@ try {
 // })
 
 const User = mongoose.model("Users",userSchema);
-export {User,connectToDb}
+export {User,connectToDb,Content}

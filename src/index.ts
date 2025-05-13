@@ -1,11 +1,12 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv'
 import mongoose from 'mongoose';
-import { connectToDb, User } from './db';
+import { connectToDb, Content, User } from './db';
 import {z} from "zod"
 import  bcrypt  from 'bcrypt';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken'
+import { userMiddleWare } from './middleware';
 dotenv.config()
 const app = express();
 const PORT =process.env.PORT||4000
@@ -82,15 +83,34 @@ app.post("/api/v1/signin",async(req,res)=>{
     res.status(200).json({"message":"user successfully logged in"})
     return
   } catch (error) {
-    
+    console.error('Error during user signIn:', error);
+     res.status(500).json({ error: 'Error while signing in' });
+     return
   }
+})
 
 
-  
-})
-app.post("/api/v1/content",(req,res)=>{
-  
-})
+app.post("/api/v1/content", userMiddleWare, async (req: Request, res: Response) => {
+  try {
+    const { type, link, title } = req.body;
+    //@ts-ignore
+    const { userId } = req.user;
+
+    const content = new Content({
+      title,
+      link,
+      type,
+      userId,
+      tags: [],
+    });
+
+    await content.save();
+    res.status(201).json({ message: "Content created", content });
+  } catch (error) {
+    console.error("Error creating content:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 app.get("/api/v1/content",(req,res)=>{
   
 })
